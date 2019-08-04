@@ -3,6 +3,7 @@ import Joi from "joi-browser";
 import { getGenres } from "../services/fakeGenreService";
 import { getMovie, saveMovie } from "../services/fakeMovieService";
 import Form from "./common/form";
+import { toast } from "react-toastify";
 
 class MovieForm extends Form {
   state = {
@@ -61,6 +62,7 @@ class MovieForm extends Form {
   }
 
   doSubmit = () => {
+    toast.success("Movie successfully added.");
     saveMovie(this.state.data);
 
     this.props.history.push("/movies");

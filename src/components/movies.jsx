@@ -8,6 +8,7 @@ import MoviesTable from "./moviesTable";
 import _ from "lodash";
 import { Link } from "react-router-dom";
 import SearchBox from "./searchBox";
+import { toast } from "react-toastify";
 
 class Movies extends Component {
   state = {
@@ -26,6 +27,7 @@ class Movies extends Component {
   }
 
   handleDelete = movie => {
+    toast.success("Movie successfully deleted.");
     const movies = this.state.movies.filter(m => m._id !== movie._id);
     this.setState({ movies });
   };

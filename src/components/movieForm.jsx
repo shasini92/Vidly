@@ -1,7 +1,7 @@
-import React, { Component } from "react";
+import React from "react";
 import Joi from "joi-browser";
-import { getGenres } from "../services/fakeGenreService";
-import { getMovie, saveMovie } from "../services/fakeMovieService";
+import { getGenres } from "../services/genreService";
+import { getMovie, saveMovie } from "../services/movieService";
 import Form from "./common/form";
 import { toast } from "react-toastify";
 
@@ -18,7 +18,7 @@ class MovieForm extends Form {
   };
 
   schema = {
-    _id: Joi.string(),
+    id: Joi.string(),
     title: Joi.string()
       .required()
       .label("Title"),
@@ -37,34 +37,45 @@ class MovieForm extends Form {
       .label("Daily Rental Rate")
   };
 
-  componentDidMount() {
-    const genres = getGenres();
+  async populateGenres() {
+    const { data: genres } = await getGenres();
     this.setState({ genres });
+  }
 
+  async populateMovie() {
     const movieId = this.props.match.params.id;
+    //Return before populating the form if it is a new movie
     if (movieId === "new") return;
-    //Return before populating the form
+    // Get data from DB and check if the movie exists
+    const { data: movie } = await getMovie(movieId);
+    if (!movie.id) return this.props.history.replace("/not-found");
 
-    const movie = getMovie(movieId);
-    if (!movie) return this.props.history.replace("/not-found");
-
+    // Populate the form
     this.setState({ data: this.mapToViewModel(movie) });
+  }
+
+  async componentDidMount() {
+    await this.populateGenres();
+    await this.populateMovie();
   }
 
   mapToViewModel(movie) {
     return {
-      _id: movie._id,
+      id: movie.id,
       title: movie.title,
-      genreId: movie.genre._id,
+      genreId: movie.genreId,
       numberInStock: movie.numberInStock,
       dailyRentalRate: movie.dailyRentalRate
     };
   }
 
-  doSubmit = () => {
-    toast.success("Movie successfully added.");
-    saveMovie(this.state.data);
-
+  doSubmit = async () => {
+    const { data } = await saveMovie(this.state.data);
+    if (data.message === "Movie Created ") {
+      toast.success("Movie successfully added.");
+    } else {
+      toast.success("Movie successfully updated.");
+    }
     this.props.history.push("/movies");
   };
 

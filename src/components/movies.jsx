@@ -1,14 +1,14 @@
 import React, { Component } from "react";
-import { getMovies } from "../services/fakeMovieService";
 import Pagination from "./common/pagination";
 import { paginate } from "../utils/paginate";
 import ListGroup from "../components/common/listGroup";
-import { getGenres } from "../services/fakeGenreService";
 import MoviesTable from "./moviesTable";
 import _ from "lodash";
 import { Link } from "react-router-dom";
 import SearchBox from "./searchBox";
 import { toast } from "react-toastify";
+import { getGenres } from "../services/genreService";
+import { getMovies, deleteMovie } from "../services/movieService";
 
 class Movies extends Component {
   state = {
@@ -21,15 +21,26 @@ class Movies extends Component {
     sortColumn: { path: "title", order: "asc" }
   };
 
-  componentDidMount() {
-    const genres = [{ _id: "", name: "All Genres" }, ...getGenres()];
-    this.setState({ movies: getMovies(), genres });
+  async componentDidMount() {
+    const { data: movies } = await getMovies();
+    const { data } = await getGenres();
+    const genres = [{ id: "", name: "All Genres" }, ...data];
+    this.setState({ movies, genres });
   }
 
-  handleDelete = movie => {
-    toast.success("Movie successfully deleted.");
-    const movies = this.state.movies.filter(m => m._id !== movie._id);
+  handleDelete = async movie => {
+    // We need to save the original state in case something goes wrong on the server, so we can revert the state in the catch block
+
+    const originalMovies = this.state.movies;
+    const movies = originalMovies.filter(m => m.id !== movie.id);
     this.setState({ movies });
+    try {
+      await deleteMovie(movie.id);
+      toast.success("Movie successfully deleted.");
+    } catch (ex) {
+      toast.error("This movie has already been deleted");
+      this.setState({ movies: originalMovies });
+    }
   };
 
   handleLike = movie => {
@@ -71,8 +82,8 @@ class Movies extends Component {
       filtered = allMovies.filter(m =>
         m.title.toLowerCase().startsWith(searchQuery.toLowerCase())
       );
-    } else if (selectedGenre && selectedGenre._id) {
-      filtered = allMovies.filter(m => m.genre._id === selectedGenre._id);
+    } else if (selectedGenre && selectedGenre.id) {
+      filtered = allMovies.filter(m => m.genreId === selectedGenre.id);
     }
 
     // When sorting using lodash, the first parameter is the array, the second is an array of sorting properties and the third is the sort order

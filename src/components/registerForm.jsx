@@ -2,6 +2,7 @@ import React from "react";
 import Joi from "joi-browser";
 import Form from "./common/form";
 import * as userService from "../services/userService";
+import auth from "../services/authService";
 
 class RegisterForm extends Form {
   state = {
@@ -28,12 +29,19 @@ class RegisterForm extends Form {
 
   doSubmit = async () => {
     //Call the server
-    const { data } = await userService.register(this.state.data);
+    const {
+      data: { message },
+      data: { jwt }
+    } = await userService.register(this.state.data);
 
-    if (data.message === "User already exists.") {
+    if (message === "User already exists.") {
       const errors = { ...this.state.errors };
-      errors.username = data.message;
+      errors.username = message;
       this.setState({ errors });
+    } else if (message === "User Created.") {
+      auth.loginWithJwt(jwt);
+      // Send user to home page and fully reload the application
+      window.location = "/";
     }
   };
 

@@ -97,14 +97,17 @@ class Movies extends Component {
   render() {
     const { length: count } = this.state.movies;
     const { pageSize, currentPage, sortColumn, searchQuery } = this.state;
+    const { user } = this.props;
 
     if (count === 0)
       return (
         <div>
           <p>There are no movies in the database.</p>
-          <Link to="/movies/new" className="btn btn-primary mt-2 mb-3">
-            New Movie
-          </Link>
+          {user && (
+            <Link to="/movies/new" className="btn btn-primary mt-2 mb-3">
+              New Movie
+            </Link>
+          )}
         </div>
       );
 
@@ -113,6 +116,11 @@ class Movies extends Component {
     return (
       <div className="row">
         <div className="col-3">
+          {user && (
+            <Link to="/movies/new" className="btn btn-primary mt-2 mb-3">
+              New Movie
+            </Link>
+          )}
           <ListGroup
             items={this.state.genres}
             onItemSelect={this.handleGenreSelect}
@@ -128,6 +136,7 @@ class Movies extends Component {
             onDelete={this.handleDelete}
             onSort={this.handleSort}
             sortColumn={sortColumn}
+            user={user}
           />
           <Pagination
             itemsCount={totalCount}

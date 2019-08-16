@@ -9,26 +9,21 @@ const ListGroup = ({
   selectedGenre
 }) => {
   return (
-    <div>
-      <Link to="/movies/new" className="btn btn-primary btn-block mt-2 mb-3">
-        New Movie
-      </Link>
-      <ul className="list-group">
-        {items.map(item => (
-          <li
-            key={item[valueProperty]}
-            className={
-              item === selectedGenre
-                ? "list-group-item active"
-                : "list-group-item"
-            }
-            onClick={() => onItemSelect(item)}
-          >
-            {item[textProperty]}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className="list-group">
+      {items.map(item => (
+        <li
+          key={item[valueProperty]}
+          className={
+            item === selectedGenre
+              ? "list-group-item active"
+              : "list-group-item"
+          }
+          onClick={() => onItemSelect(item)}
+        >
+          {item[textProperty]}
+        </li>
+      ))}
+    </ul>
   );
 };
 

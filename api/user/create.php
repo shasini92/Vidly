@@ -10,6 +10,13 @@ header('Access-Control-Allow-Headers: Access-Control-Allow-Headers, Content-Type
 
 include_once '../../config/Database.php';
 include_once '../../models/User.php';
+// JWT Files
+include_once '../../vendor/firebase/php-jwt/src/BeforeValidException.php';
+include_once '../../vendor/firebase/php-jwt/src/ExpiredException.php';
+include_once '../../vendor/firebase/php-jwt/src/SignatureInvalidException.php';
+include_once '../../vendor/firebase/php-jwt/src/JWT.php';
+include_once '../../config/core.php';
+use \Firebase\JWT\JWT;
 
 // Instantiate DB & connect
 $database = new Database();
@@ -26,24 +33,40 @@ $user->email = $data->username;
 $user->password = $data->password;
 
 // Check if the user already exists
-$result = $user->read_single();
+$user_exists = $user->read_single();
 
-// Get row count
-$num = $result->rowCount();
 
-if ($num === 0) {
+if (!$user_exists) {
+    
     // Create a User
     $result= $user->create();
-    $row = $result->fetch(PDO::FETCH_ASSOC);
-    extract($row);
+    
+    // Create token
+    $token = array(
+        "iss" => $iss,
+        "aud" => $aud,
+        "iat" => $iat,
+        "nbf" => $nbf,
+        "data" => array(
+            "id" => $user->id,
+            "name" => $user->name,
+            "email" => $user->email
+        )
+    );
+    
+    // generate jwt
+    $jwt = JWT::encode($token, $key);
     
     // Create array
     $user = array(
-        'id' => $id,
-        'email' => $email,
-        'name' => $name,
+        'id' => $user->id,
+        'email' => $user->email,
+        'name' => $user->name,
+        'jwt' => $jwt,
         'message' => 'User Created.'
     );
+    
+    
     // Make JSON
     print_r(json_encode($user));
    
